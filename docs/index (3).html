@@ -1,0 +1,281 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historia de Zenless Zone Zero</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Orbitron', monospace;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 3rem 1rem;
+            position: relative;
+            animation: slideDown 1.5s ease-out;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.5);
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        nav {
+            position: sticky;
+            top: 0;
+            background: rgba(0, 0, 0, 0.8);
+            text-align: center;
+            padding: 1rem 0;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+        nav a {
+            margin: 0 1.5rem;
+            text-decoration: none;
+            color: #00ffff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px #00ffff;
+        }
+        nav a:hover {
+            color: #ff00ff;
+            text-shadow: 0 0 20px #ff00ff;
+            transform: scale(1.1);
+        }
+        section {
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1.2s forwards;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #origen { animation-delay: 0.3s; }
+        #desarrollo { animation-delay: 0.8s; }
+        #personajes { animation-delay: 1.3s; }
+        #impacto { animation-delay: 1.8s; }
+        details {
+            margin-bottom: 1.5rem;
+            transition: all 0.4s ease;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 0.5rem;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: #00ffff;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+        summary:hover {
+            background: linear-gradient(90deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+            color: #ff00ff;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+            border: 2px solid rgba(0, 255, 255, 0.2);
+        }
+        img:hover {
+            transform: scale(1.05) rotate(1deg);
+            box-shadow: 0 8px 25px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3);
+            border-color: #00ffff;
+        }
+        h2 {
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            font-size: 2rem;
+            text-align: center;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: rgba(255, 255, 255, 0.05);
+            margin: 0.5rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #ff00ff;
+            transition: background 0.3s;
+        }
+        li:hover {
+            background: rgba(255, 0, 255, 0.1);
+        }
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+            margin-top: 3rem;
+            animation: fadeIn 1.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Historia de Zenless Zone Zero</h1>
+        <p>Explora el mundo postapocalíptico de New Eridu</p>
+    </header>
+
+    <nav>
+        <a href="#origen">Origen</a>
+        <a href="#desarrollo">Desarrollo</a>
+        <a href="#personajes">Personajes y Eventos</a>
+        <a href="#impacto">Impacto</a>
+    </nav>
+
+    <section id="origen">
+        <h2>Origen del Mundo y el Juego</h2>
+        <details open>
+            <summary>El Surgimiento de los Hollows</summary>
+            <p>Hace más de 140 años, una gran guerra desencadenó la Primera Desastre Hollow, donde anomalías sobrenaturales conocidas como Hollows comenzaron a devorar la civilización. La humanidad se refugió en ciudades como New Eridu, el último bastión contra estas catástrofes. Zenless Zone Zero, desarrollado por HoYoverse, captura esta era postapocalíptica en un RPG de acción lanzado en 2024.</p>
+            <img src="images/historia1.jpg" alt="Ciudad de New Eridu en ruinas">
+        </details>
+        <details>
+            <summary>La Caída de la Antigua Capital</summary>
+            <p>Hace 11 años, Hollow Zero se expandió rápidamente, consumiendo la antigua capital. Eventos clave incluyen la intervención fallida de la Fuerza de Defensa de Eridu, sacrificios heroicos como el de Yijiang con la Espada Qingming, y la detonación de los Pilares Shiyu para crear El Abismo, salvando a New Eridu.</p>
+            <img src="images/historia4.jpg" alt="La Caída de la Antigua Capital">
+        </details>
+    </section>
+
+    <section id="desarrollo">
+        <h2>Desarrollo y Lanzamiento</h2>
+        <details open>
+            <summary>Anuncio y Betas</summary>
+            <p>Anunciado en 2022, Zenless Zone Zero generó expectación con su estilo visual cyberpunk y mecánicas de combate innovadoras. Varias betas cerradas en 2023 permitieron refinar la jugabilidad, incorporando feedback sobre exploración en Hollows y sistema de proxies.</p>
+            <img src="images/historia2.jpg" alt="Equipo de desarrollo de HoYoverse">
+        </details>
+        <details>
+            <summary>Lanzamiento Global</summary>
+            <p>Lanzado en julio de 2024 para PC, consolas y móviles, el juego incluyó eventos de lanzamiento como "Rookie on the Road", recompensando a nuevos jugadores con agentes como Ben Bigger.</p>
+        </details>
+    </section>
+
+    <section id="personajes">
+        <h2>Personajes Clave y Eventos Mayores</h2>
+        <details open>
+            <summary>Personajes Destacados</summary>
+            <p>Zenless Zone Zero cuenta con una rica galería de agentes jugables. Aquí una selección de los más icónicos:</p>
+            <div class="character-grid">
+                <ul>
+                    <li><strong>Orphie and Magus</strong> (Fuego, Ataque, Obol Squad): Dúo poderoso con ataques ígneos devastadores.</li>
+                    <li><strong>Seed</strong> (Eléctrico, Ataque, Obol Squad): Atacante eléctrico de alto daño.</li>
+                    <li><strong>Alice</strong> (Físico, Anomalía, Spook Shack): Especialista en debilitar enemigos con efectos de anomalía.</li>
+                    <li><strong>Yuzuha</strong> (Físico, Soporte, Spook Shack): Mejora el equipo con habilidades físicas de apoyo.</li>
+                    <li><strong>Ju Fufu</strong> (Fuego, Aturdimiento, Yunkui Summit): Aturde enemigos con fuego intenso.</li>
+                </ul>
+                <ul>
+                    <li><strong>Yixuan</strong> (Éter, Ruptura, Yunkui Summit): Rompe defensas con daño etéreo.</li>
+                    <li><strong>Hugo</strong> (Hielo, Ataque, Mockingbird): Congela y daña con precisión letal.</li>
+                    <li><strong>Vivian</strong> (Éter, Anomalía, Mockingbird): Debilita con anomalías etéreas.</li>
+                    <li><strong>Trigger</strong> (Eléctrico, Aturdimiento, Obol Squad): Controla el campo con descargas.</li>
+                    <li><strong>Soldier 0 Anby</strong> (Eléctrico, Ataque, Silver Squad): Ofensiva eléctrica implacable.</li>
+                </ul>
+            </div>
+            <img src="images/historia5.jpg" alt="Galería de personajes de ZZZ">
+        </details>
+        <details>
+            <summary>Eventos Mayores en la Historia</summary>
+            <p>La narrativa se desarrolla a través de comisiones principales y eventos:</p>
+            <ul>
+                <li><strong>Primera Desastre Hollow (140+ años atrás):</strong> Inicio de las anomalías que destruyeron la civilización.</li>
+                <li><strong>Caída de la Antigua Capital (11 años atrás):</strong> Expansión de Hollow Zero, sacrificios y creación de El Abismo.</li>
+                <li><strong>Actualizaciones 2025:</strong> Versión 1.5 introdujo personajes como Qingyi y Jane; eventos como "Rookie on the Road" y quests de agentes como Burnice en 1.2.</li>
+                <li><strong>Versión 2.2 (Septiembre 2025):</strong> Nuevos agentes como Orphie and Magus, y arcos de historia en Obol Squad.</li>
+            </ul>
+            <img src="images/historia6.jpg" alt="Evento en Hollow Zero">
+        </details>
+    </section>
+
+    <section id="impacto">
+        <h2>Impacto y Recepción</h2>
+        <details open>
+            <summary>Recepción y Comunidad</summary>
+            <p>Elogiado por su narrativa inmersiva y personajes carismáticos, ZZZ ha atraído millones de jugadores. Actualizaciones regulares, como la versión 2.2 en septiembre 2025, mantienen el engagement con nuevos eventos y agentes.</p>
+            <img src="images/historia3.jpg" alt="Comunidad de jugadores de ZZZ">
+        </details>
+        <details>
+            <summary>Legado Cultural</summary>
+            <p>El juego ha influido en la cultura pop, con colaboraciones y memes sobre proxies como Wise y Belle. Su exploración de temas postapocalípticos resuena globalmente.</p>
+        </details>
+    </section>
+
+    <footer>
+        <p>© 2025 Historia de Zenless Zone Zero - Powered by HoYoverse</p>
+    </footer>
+</body>
+</html>
